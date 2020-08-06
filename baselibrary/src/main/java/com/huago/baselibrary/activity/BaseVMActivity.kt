@@ -1,6 +1,7 @@
 package com.huago.baselibrary.activity
 
 import android.os.Bundle
+import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.fmt.github.base.viewmodel.BaseViewModel
@@ -34,14 +35,16 @@ abstract class BaseVMActivity : AppCompatActivity() {
         }
     }
 
-    abstract fun getLayoutId(): Int
+    @get:LayoutRes
+    abstract val layoutRes: Int
+
 
     abstract fun initView()
 
     abstract fun getViewModel(): BaseViewModel
 
     open fun setContentLayout() {
-        setContentView(getLayoutId())
+        setContentView(layoutRes)
         initViewModelAction()
         initView()
         initData()

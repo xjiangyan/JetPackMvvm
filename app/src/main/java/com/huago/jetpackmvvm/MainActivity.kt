@@ -18,16 +18,14 @@ import com.huago.jetpackmvvm.databinding.BaseActivityMainBinding
 import com.huago.jetpackmvvm.viewmodel.MainViewModel
 import com.yinxin1os.im.utils.ext.onClick
 import kotlinx.coroutines.*
+import java.util.concurrent.Executors
+import kotlin.math.log
 
-class MainActivity : BaseDataBindVMActivity<BaseActivityMainBinding>() {
+class MainActivity(override val layoutRes: Int = R.layout.base_activity_main) :
+    BaseDataBindVMActivity<BaseActivityMainBinding>() {
 
     private val mViewModel: MainViewModel by lazy { ViewModelProvider(this).get(MainViewModel::class.java) }
 
-
-    override fun getLayoutId(): Int {
-
-        return R.layout.base_activity_main
-    }
 
     override fun initView() {
         mDataBind.btnSave.onClick {
@@ -45,8 +43,9 @@ class MainActivity : BaseDataBindVMActivity<BaseActivityMainBinding>() {
 //            lifecycleScope.launch {
             mViewModel.loadUserInfoList()
 //            }
-
+            Log.e("debug", "onClick loadUserInfoList finish: ")
         }
+
 
 
         mDataBind.btnJump.onClick {
@@ -67,30 +66,59 @@ class MainActivity : BaseDataBindVMActivity<BaseActivityMainBinding>() {
                             "id: ${it.userId}  userName: ${it.userName}  pwd:${it.pwd} sex :${it.sex}"
                         )
                     })
-                adapter?.setNewData(t)
+                mAdapter?.setNewData(t)
             })
 
         initRVList()
 
 
-        mViewModel.merge()
+//        mViewModel.merge()
+//mViewModel.delayCancel()
+
+        mViewModel.getUNDISPATCHED()
 
     }
 
-    val adapter: UserInfoAdapter by lazy { UserInfoAdapter() }
+    suspend fun test() {
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+            .use { dispatcher ->
+                GlobalScope.launch(dispatcher) {
+                    val job = launch {
+                        delay(1000)
+                        "Hello"
+                    }
+                    val result = job.join()
+                }.join()
+            }
+    }
+
+    suspend fun test2() {
+        GlobalScope.launch(newSingleThreadContext("Dispather")) {
+            val job = launch {
+                delay(1000)
+                "Hello"
+            }
+            val result = job.join()
+        }.join()
+    }
+
+    val mAdapter: UserInfoAdapter by lazy { UserInfoAdapter() }
 
 
     private fun initRVList() {
-        mDataBind.rvlist.adapter = adapter
-        mDataBind.rvlist.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        mDataBind.rvlist.setHasFixedSize(true)
 
 
+
+        with(mDataBind.rvlist) {
+            adapter = mAdapter
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            setHasFixedSize(true)
+        }
     }
 
     override fun getViewModel(): BaseViewModel {
         return mViewModel
     }
+
 
 }

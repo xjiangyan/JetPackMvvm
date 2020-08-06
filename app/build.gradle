@@ -7,7 +7,7 @@ apply plugin: 'kotlin-kapt'
 
 
 kapt {
-//    generateStubs = true
+    generateStubs = true
 
     arguments {
         arg("AROUTER_MODULE_NAME", project.getName())
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId "com.huago.jetpackmvvm"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -79,6 +79,7 @@ android {
             minifyEnabled true
             zipAlignEnabled true // Zipalign优化
             shrinkResources true // 移除无用的resource文件
+            buildConfigField "boolean", "PRODUCE_MODE", "true"
 
         }
 
@@ -88,6 +89,7 @@ android {
             minifyEnabled false
             shrinkResources false // 移除无用的resource文件
             zipAlignEnabled false // Zipalign优化
+            buildConfigField "boolean", "PRODUCE_MODE", "true"
 
         }
 

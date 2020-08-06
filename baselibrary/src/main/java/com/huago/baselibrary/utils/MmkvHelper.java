@@ -13,15 +13,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 应用模块: storage
- * <p>
- * 类描述: 腾讯MMKV序列化存储工具类
- * <p>
- *
- * @author darryrzhoong
- * @since 2020-01-27
- */
+
 public class MmkvHelper {
     private static MMKV mmkv;
 

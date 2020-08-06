@@ -2,14 +2,14 @@ package com.huago.jetpackmvvm.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.fmt.github.base.viewmodel.BaseViewModel
+import com.fmt.github.base.viewmodel.Cancel
 import com.huago.jetpackmvvm.dao.DBManager
 import com.huago.jetpackmvvm.dao.UserInfo
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlin.concurrent.thread
+import kotlinx.coroutines.*
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
  * @author xjiang
@@ -20,14 +20,21 @@ class MainViewModel : BaseViewModel() {
 
 
     fun loadUserInfoList() {
-        launch {
+        launch(context = Dispatchers.IO) {
+            for (i in 0..100) {
 
-            val loadAll = DBManager.getInstance().userInfoDao?.loadAll()?.toMutableList()
-            Log.e("debug", "loadAll:  " + Thread.currentThread().name)
-            loadAll?.let {
-                userInfos.postValue(it)
+                val loadAll = DBManager.getInstance().userInfoDao?.loadAll()?.toMutableList()
+                Log.e("debug", "loadAll:  " + Thread.currentThread().name)
+                loadAll?.let {
+                    userInfos.postValue(it)
+                }
             }
+//        var da: LiveData<Int> = emit {
+//            1
+//        }
         }
+
+
         Log.e("debug", "withContext(Dispatchers.IO): " + Thread.currentThread().name)
     }
 
@@ -39,6 +46,42 @@ class MainViewModel : BaseViewModel() {
 
             loadUserInfoList()
         }
+//        launch {
+//
+//            val async1 = async {
+//                delay(1000)
+//                Log.e("debug1", "1000: ")
+//                3
+//            }
+//            val async2 = async {
+//                delay(3000)
+//                Log.e("debug1", "3000: ")
+//                6
+//            }
+//
+//
+//            val i = async1.await() + async2.await()
+//            Log.e("debug1", "i: $i")
+//        }
+//        launch {
+//
+//            val async1 = launch {
+//                delay(1000)
+//                Log.e("debug2", "1000: ")
+//                3
+//            }
+//            val async2 = launch {
+//                delay(3000)
+//                Log.e("debug2", "3000: ")
+//
+//                6
+//            }
+//
+//
+//            Log.e("debug2", "i: $")
+//        }
+
+
     }
 
     suspend fun get1(): String {
@@ -65,14 +108,14 @@ class MainViewModel : BaseViewModel() {
         launch {
 
             Log.e("debug", "merge: merge start")
-            val async1 = GlobalScope.async {
+            val async1 = async {
                 get1()
                 99
             }
-            val async2 = GlobalScope.async {
+            val async2 = async {
                 get2()
             }
-            val async3 = GlobalScope.async {
+            val async3 = async {
                 get3()
             }
 //            Log.e("debug", "result1: " + get1())
@@ -86,4 +129,48 @@ class MainViewModel : BaseViewModel() {
 
     }
 
+
+    fun getUNDISPATCHED() {
+        Log.e("debug", "start " + Thread.currentThread().name)
+        //DEFAULT顺序执行
+        //  UNDISPATCHED 协程体里面有suspend就异步执行，下面的继续执行
+        viewModelScope.launch(context = Dispatchers.Main, start = CoroutineStart.UNDISPATCHED) {
+
+            Log.e("debug", "UNDISPATCHED start " + Thread.currentThread().name)
+            delay(5000)
+            Log.e("debug", "UNDISPATCHED end " + Thread.currentThread().name)
+        }
+        Log.e("debug", "end " + Thread.currentThread().name)
+    }
+
+    fun delayCancel() {
+        launch(cancel = object : Cancel {
+            override fun invoke(e: Exception) {
+                Log.e("debug", "Cancel e: " + e.localizedMessage)
+            }
+        }) {
+            repeat(10000) {
+                Log.e("debug", "repeat: $it")
+            }
+        }
+    }
+
+    suspend fun dea() {
+        val job = GlobalScope.launch {
+            try {
+                repeat(1000) { i ->
+                    println("job: I'm sleeping $i ...")
+                    delay(500L)
+                }
+            } finally {
+                println("job: I'm running finally")
+            }
+        }
+
+
+        delay(1300L) // 延迟一段时间
+        println("main: I'm tired of waiting!")
+        job.cancelAndJoin() // 取消该作业并且等待它结束
+        println("main: Now I can quit.")
+    }
 }
